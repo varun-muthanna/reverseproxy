@@ -108,7 +108,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(resBody) //essentially doing it twice
 
-	if(srv==nil) {
+	
+	if srv !=nil {
 		fmt.Println(string(resBody))
 	}
 }
