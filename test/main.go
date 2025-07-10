@@ -7,29 +7,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync/atomic"
 	"syscall"
 	"time"
+	"github.com/varun-muthanna/loadbalancer/test/handler"
+	"github.com/gorilla/mux"
 )
 
 var connectionCount int32
-
-type handler struct {
-	add string
-}
-
-func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	atomic.AddInt32(&connectionCount, 1)
-
-	defer func() {
-		atomic.AddInt32(&connectionCount, -1)
-	}()
-
-	var str string = fmt.Sprintf("hello you got loadbalanced to me at %s", h.add)
-
-	w.Write([]byte(str))
-}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -39,15 +23,25 @@ func main() {
 	port := os.Args[1]
 	address := ":" + port
 
-	h := &handler{
-		add: address,
-	}
+	r := mux.NewRouter()
+
+	getRouter := r.Methods("GET").Subrouter()
+	getRouter.HandleFunc("/",handler.GetRouter)
+
+	putRouter := r.Methods("PUT").Subrouter()
+	putRouter.HandleFunc("/",handler.PutRouter)
+
+	postRouter := r.Methods("POST").Subrouter()
+	postRouter.HandleFunc("/",handler.PostRouter)
+
+	deleteRouter := r.Methods("POST").Subrouter()
+	deleteRouter.HandleFunc("/",handler.DeleteRouter)
 
 	s := &http.Server{
-		Addr:    address,
-		Handler: h,
+		Addr: address,
+		Handler: r,
 	}
-
+	
 	ch := make(chan os.Signal,1)
 
 	go func(){
