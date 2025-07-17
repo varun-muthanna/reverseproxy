@@ -63,7 +63,10 @@ func GetData() ([]*Data, error) {
 	return d, nil
 }
 
-func (d *Data) PostData() error {
+func PostData(b []byte )error {
+
+	var d *Data = &Data{}
+	json.Unmarshal(b,&d)
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -108,7 +111,11 @@ func (d *Data) PostData() error {
 	return nil
 }
 
-func (d *Data) PutData() error {
+func PutData(b []byte) error {
+
+	var d *Data = &Data{}
+
+	json.Unmarshal(b,&d)
 
 	dataList, err := GetData()
 	var isExisting bool = false
@@ -128,7 +135,7 @@ func (d *Data) PutData() error {
 	}
 
 	if !isExisting {
-		err := d.PostData()
+		err := PostData(b)
 		if err != nil {
 			fmt.Println("Error posting new put data")
 			return err

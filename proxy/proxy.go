@@ -73,13 +73,13 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		url = "http://[" + ipList[0].String() +"]"
 
 	} else { //load balanced to one of localhost
-		url = "http://" + srv.GetAddress() + r.RequestURI
+		url = "http://" + srv.GetAddress() + r.RequestURI //get address of the backend server from the conf file 
 		srv.IncrementConnection()
 		defer srv.DecrementConnections()
 	}
 
 	//fmt.Printf("url , %s\n",url)
-	req, err := http.NewRequest(r.Method, url, r.Body)
+	req, err := http.NewRequest(r.Method, url, r.Body) //r.Body() is a stream and can be called only once 
 	
 	if err != nil {
 		log.Printf("Error in creating request %s", err)
@@ -87,7 +87,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Host=r.Host
-
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {

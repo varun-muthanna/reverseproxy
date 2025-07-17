@@ -1,6 +1,7 @@
 package data //test unexported functions
 
 import (
+	"encoding/json"
 	"os"
 	"reflect"
 	"testing"
@@ -9,12 +10,12 @@ import (
 // 2 cases of POST with valid and invalid JSON
 func TestCreateFile(t *testing.T) {
 
-	d1 := Data{ID: 1, Name: "Varun", Address: "Kotoor village"} //valid JSON
+	d1 := []byte(`{"ID": 1, "name": "Varun", "add": "Kotoor village"}`) //valid JSON
 
-	d2 := Data{Address: "Kotoor village"} //invalid JSON
+	d2 := []byte(`{"add": "Kotoor village"}`) //invalid JSON
 
-	err1 := d1.PostData()
-	err2 := d2.PostData()
+	err1 := PostData(d1)
+	err2 := PostData(d2)
 
 	defer os.Remove(FILE_PATH)
 
@@ -29,6 +30,7 @@ func TestCreateFile(t *testing.T) {
 
 // 2 cases of GET with no file and one with file
 func TestGetFile(t *testing.T) {
+	var Data1, Data2 *Data
 	var DataList, DataListT []*Data
 	var err error
 
@@ -38,13 +40,17 @@ func TestGetFile(t *testing.T) {
 		t.Errorf("Error reading empty file, %v", err)
 	}
 
-	d1 := &Data{ID:1,Name: "Varun", Address: "Kotoor village", Phone_number: 122}
-	d1.PostData()
-	DataListT = append(DataListT, d1)
+	d1 := []byte(`{"ID":1, "name": "Varun", "add": "Kotoor village", "Ph": 122}`)
+	PostData(d1)
 
-	d2 := &Data{ID:2,Name: "Mayank", Address: "Kotoor village", Phone_number: 122}
-	d2.PostData()
-	DataListT = append(DataListT, d2)
+	json.Unmarshal(d1,&Data1)
+	DataListT = append(DataListT, Data1)
+
+	d2 := []byte(`{"ID":2,"name": "Mayank", "add": "Kotoor village", "Ph": 122}`)
+	PostData(d2)
+
+	json.Unmarshal(d2,&Data2)
+	DataListT = append(DataListT, Data2)
 	defer os.Remove(FILE_PATH)
 
 	DataList, err = GetData()
@@ -60,38 +66,36 @@ func TestGetFile(t *testing.T) {
 
 // 2 cases of PUT with old ID and new ID
 func TestEditFile(t *testing.T) {
+	var Data1, Data2 *Data
+	d1 := []byte(`{"ID":1,"name": "Varun"}`)
 
-	d1 := &Data{
-		ID:   1,
-		Name: "Varun",
-	}
-
-	d1.PutData()
+	PutData(d1)
 	defer os.Remove(FILE_PATH)
 
 	dataList, err := GetData()
 
+	json.Unmarshal(d1,&Data1)
+
 	if err != nil {
 		t.Errorf("Error getting data")
 	}
 
-	if !reflect.DeepEqual(d1, dataList[0]) {
+	if !reflect.DeepEqual(Data1, dataList[0]) {
 		t.Errorf("Data not matching in new PUT")
 	}
 
-	d1 = &Data{
-		ID:   1,
-		Name: "Mayank",
-	}
+	d2 := []byte(`{"ID":1,"name": "Mayank"}`)
 
-	d1.PutData()
+	PutData(d2)
 	dataList, err = GetData()
+
+	json.Unmarshal(d2,&Data2)
 
 	if err != nil {
 		t.Errorf("Error getting data")
 	}
 
-	if !reflect.DeepEqual(d1, dataList[0]) {
+	if !reflect.DeepEqual(Data2, dataList[0]) {
 		t.Errorf("Data not matching in existing PUT")
 	}
 
@@ -99,13 +103,14 @@ func TestEditFile(t *testing.T) {
 
 // 2 cases of DELETE with valid ID and invalid ID
 func TestDeleteFile(t *testing.T) {
+	var  Data2 *Data
+	d1 := []byte(`{"ID": 1, "name": "Varun", "add": "Kotoor village"}`)
 
-	d1 := &Data{ID: 1, Name: "Varun", Address: "Kotoor village"}
+	d2 := []byte(`{"ID": 2, "name": "Mayank","add": "Kotoor village"}`)
+	json.Unmarshal(d2,&Data2)
 
-	d2 := &Data{ID: 2, Name: "Mayank", Address: "Kotoor village"}
-
-	err1 := d1.PostData()
-	err2 := d2.PostData()
+	err1 := PostData(d1)
+	err2 := PostData(d2)
 
 	defer os.Remove(FILE_PATH)
 
@@ -121,7 +126,7 @@ func TestDeleteFile(t *testing.T) {
 		t.Errorf("error getting data")
 	}
 
-	if !reflect.DeepEqual(d2, DataList[0]) {
+	if !reflect.DeepEqual(Data2, DataList[0]) {
 		t.Errorf("error in deletion")
 	}
 

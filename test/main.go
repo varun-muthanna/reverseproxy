@@ -13,8 +13,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var connectionCount int32
-
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Usage: go run backend.go <port>")
@@ -30,12 +28,14 @@ func main() {
 
 	putRouter := r.Methods("PUT").Subrouter()
 	putRouter.HandleFunc("/",handler.PutRouter)
+	putRouter.Use(handler.MiddleWareHandler)
 
 	postRouter := r.Methods("POST").Subrouter()
 	postRouter.HandleFunc("/",handler.PostRouter)
+	postRouter.Use(handler.MiddleWareHandler)
 
-	deleteRouter := r.Methods("POST").Subrouter()
-	deleteRouter.HandleFunc("/",handler.DeleteRouter)
+	deleteRouter := r.Methods("DELETE").Subrouter()
+	deleteRouter.HandleFunc("/{id}",handler.DeleteRouter)
 
 	s := &http.Server{
 		Addr: address,
